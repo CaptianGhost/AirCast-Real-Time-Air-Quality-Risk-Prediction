@@ -23,13 +23,13 @@ The pipeline includes:
 - Time-aware train/test split
 - L1-regularized Logistic Regression
 - Saved model + threshold
-- Seprate prediction script
+- Separate prediction script
 
 ---
 
 ## Project Structure
 
-```
+```markdown
 project/
 |
 |-- data/
@@ -57,7 +57,7 @@ project/
 
 Fetch hourly air quality data from Open-Meteo API:
 
-```
+```commandline
 python src/fetch_api.py
 ```
 
@@ -92,11 +92,12 @@ data/processed/data_features.csv
 - ROC-AUC evaluation
 - Saves model + threshold
 
-```markdown
+```commandline
 python src/train.py
 ```
 
 Outputs:
+
 ```markdown
 models/air_quality_model.pkl
 models/threshold.pkl
@@ -108,7 +109,7 @@ models/threshold.pkl
 
 Generate probability and classification flag:
 
-```markdown
+```commandline
 python src/predict.py
 ```
 
@@ -142,18 +143,20 @@ data/processed/predictions.csv
 
 ## Requirements
 
+```requirements
 Python 3.10+
 
 Libraries:
 
-- pandas
-- scikit-learn
-- joblib
+- Pandas
+- Scikit-learn
+- Joblib
 - requests
+```
 
 Install with:
 
-```markdown
+```commandline
 pip install -r requirements.txt
 ```
 
