@@ -1,6 +1,12 @@
-# Air Quality Worsening Prediction (ML Pipeline)
+# Air Quality Worsening Prediction (ML Pipeline + FastAPI API)
 
-A structured end-to-end Machine Learning pipeline that predicts whether **PM2.5 air quality will worsen in the next hour** using lag, momentum, and rolling statistical features.
+A structured end-to-end Machine Learning pipeline that predicts whether **PM2.5 levels will worsen in the next hour**, with a deployed **FastAPI inference API** using live data.
+
+---
+
+## Motivation
+
+This project explores whether short-term pollution trends can be used to predict **near-term worsening in PM2.5 levels**, while practicing a structured end-to-end machine learning workflow — from data ingestion to a live prediction API.
 
 ---
 
@@ -21,9 +27,9 @@ The pipeline includes:
 - Fetching API data 
 - Feature engineering (lags, momentum, rolling means)
 - Time-aware train/test split
-- L1-regularized Logistic Regression
-- Saved model + threshold
-- Separate prediction script
+- Regularized classification models
+- Serialized model, decision threshold, and features columns
+- **Live FastAPI prediction endpoint**
 
 ---
 
@@ -39,6 +45,8 @@ project/
 |-- models/
 |
 |-- src/
+|   |-- api/
+|   |    |-- main.py
 |   |-- fetch_api.py
 |   |-- features.py
 |   |-- train.py
@@ -46,6 +54,7 @@ project/
 |   |-- utils.py
 |
 |-- requirements.txt
+|-- LICENSE
 |-- README.md
 ```
 
@@ -86,11 +95,12 @@ data/processed/data_features.csv
 
 ### [3] Train Model
 
-- 80/20 time-based split
-- StandardScaler
-- L1 Logistic Regression (saga solver)
+- Time-aware split (no leakage)
+- Regularized classification baseline
+- XGBoost (final selected model)
 - ROC-AUC evaluation
-- Saves model + threshold
+- Probability-based decision threshold (default 0.5)
+- Saves model artifacts
 
 ```commandline
 python src/train.py
@@ -101,11 +111,12 @@ Outputs:
 ```markdown
 models/air_quality_model.pkl
 models/threshold.pkl
+models/feature_columns.pkl
 ```
 
 ---
 
-### [4] Run Predictions
+### [4] Offline Predictions
 
 Generate probability and classification flag:
 
@@ -120,24 +131,73 @@ data/processed/predictions.csv
 
 ---
 
-## Model Details
+## Live Prediction API (FastAPI)
 
-- Algorithm: Logistic Regression
-- Regularization: L1 (feature selection)
-- Solver: saga
-- Time-aware split (no leakage)
-- Evaluation metric: ROC-AUC
+The project includes a **production-style ML inference API** that:
+
+- Accepts a city name
+- Fetches live air quality data
+- Builds features dynamically
+- Applies trained model
+- Returns predictions + probability
+
+### Run the API
+
+```commandline
+uvicorn src.api.main:app --reload
+```
+
+Open Swagger UI:
+
+```http request
+http://127.0.0.1:8000/docs
+```
 
 ---
 
-## Key Learning outcomes
+#### Example Request
 
-- Proper ML project structuring
-- Time-series safe splitting
-- Feature engineering for temporal data
-- Regularization-based feature selection
-- Clean separation between training and inference
-- Reproducible model saving & loading
+`POST /air-quality`
+
+```json
+{
+  "city": "Delhi"
+}
+```
+
+---
+
+#### Example Response
+
+```json
+{
+  "air_worsening_probability": 0.91,
+  "prediction": 1,
+  "label": "Worsening"
+}
+```
+
+---
+
+## Model Details
+
+- Final Model: XGBoost Classifier
+- Compared against Logistic Regression and Random Forest
+- Selected based on ROC-AUC performance
+- Probability-based classification with explicit decision threshold
+
+---
+
+## Key Learning Outcomes
+
+- End-to-end ML pipeline design
+- Time-series feature engineering
+- Model comparison & selection (including XGBoost)
+- Threshold-based decision-making
+- Model serialization & reproducibility
+- FastAPI ML inference deployment
+- Live external API integration
+- Training vs inference consistency
 
 ---
 
@@ -147,11 +207,13 @@ data/processed/predictions.csv
 Python 3.10+
 
 Libraries:
-
-- Pandas
-- Scikit-learn
-- Joblib
+- pandas
+- scikit-learn
+- joblib
 - requests
+- fastapi
+- uvicorn
+- xgboost
 ```
 
 Install with:
@@ -164,10 +226,12 @@ pip install -r requirements.txt
 
 ## Future Improvements
 
-- Cross-validation with time series splits
-- Threshold optimization
-- More advanced models (tree-based, boosting)
-- Live prediction API deployment
+- Model monitoring
+- Scheduled retraining
+- Docker deployment
+- Cloud hosting
+- Additional pollutant forecasting
+- Multi-city batch prediction endpoint
 
 ---
 
